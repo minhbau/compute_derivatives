@@ -25,7 +25,7 @@ def derivative_8thCFD(f,dx):
 	8th order central finite difference, uniform grids
 	'''
 	N = f.size
-	dfdx = np.zeros(N,dtype=np.float)
+	dfdx = np.zeros(N,dtype=np.float64)
 
 	# Coefficients for interior grids
 	c = [0, 4/5, -1/5, 4/105, -1/280] # c1 = 4/5; c2 = -1/5; c3 = 4/105; c4 = -1/280
@@ -50,7 +50,7 @@ def derivative_6thCFD(f,dx):
 	6th order central finite difference, uniform grids
 	'''
 	N = f.size
-	dfdx = np.zeros(N,dtype=np.float)
+	dfdx = np.zeros(N,dtype=np.float64)
 
 	# Coefficients for interior grids
 	c = [0, 3/4, -3/20, 1/60]
@@ -75,7 +75,7 @@ def derivative_4thCFD(f,dx):
 	4th order central finite difference, uniform grids
 	'''
 	N = f.size
-	dfdx = np.zeros(N,dtype=np.float)
+	dfdx = np.zeros(N,dtype=np.float64)
 
 	# Coefficients for interior grids
 	c = [0,  2/3, -1/12]
@@ -115,5 +115,52 @@ plt.plot(x, dydx_8thCFD, '-x', label = '8thCFD')
 plt.plot(x, dydx_6thCFD, '-o', label = '6thCFD')
 plt.plot(x, dydx_4thCFD, '--', label = '4thCFD')
 plt.legend()
+plt.xlabel("x")
+plt.ylabel("dfdx")
+# plt.show()
+# ---------------------------------------------------------------
+
+# ---------------------------------------------------------------
+# Compute the maximum error for different grid size
+# ---------------------------------------------------------------
+# define step size and the number of iterations
+h = 10; iterations = 15
+
+# Use list store the grid sizes the max error
+dx = []
+max_error_4th = []
+max_error_6th = []
+max_error_8th = []
+
+for i in range(iterations):
+	h /= 2 # halve the step size
+	dx.append(h)
+	x = np.arange(0, 10*np.pi, h)
+
+	exact_solution = -np.sin(x)
+
+	# Finite difference approximation
+	y = np.cos(x)
+	dydx_4th = derivative_4thCFD(y,h)
+	dydx_6th = derivative_4thCFD(y,h)
+	dydx_8th = derivative_4thCFD(y,h)
+	# dydx = np.gradient(y,h)
+
+	# compute exact solution
+	exact_solution = -np.sin(x)
+
+	# Compute max error between
+	# numerical derivative and exact solution
+	max_error_4th.append(max(abs(exact_solution - dydx_4th)))
+	max_error_6th.append(max(abs(exact_solution - dydx_6th)))
+	max_error_8th.append(max(abs(exact_solution - dydx_8th)))
+
+# produce log-log plot of max error versus the grid sizes
+plt.figure(figsize = (12, 8))
+plt.loglog(dx, max_error_4th, '-x', label = '8thCFD')
+plt.loglog(dx, max_error_6th, '-o', label = '6thCFD')
+plt.loglog(dx, max_error_8th, '--', label = '4thCFD')
+plt.xlabel("dx")
+plt.ylabel("max_error")
 plt.show()
 # ---------------------------------------------------------------
