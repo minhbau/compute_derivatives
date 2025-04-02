@@ -96,14 +96,38 @@ def derivative_4thCFD(f,dx):
 
 	return dfdx/dx
 
+def derivative_2ndCFD(f,dx):
+	'''
+	2nd order central finite difference, uniform grids
+	'''
+	N = f.size
+	dfdx = np.zeros(N,dtype=np.float64)
+
+	# Coefficients for interior grids
+	c = [0,  0.5]
+	dfdx[1:-1] = - c[1]*f[0:-2] + c[1]*f[2:]
+
+	# Two grids at Left boundary is computed by 4th order forward finite difference
+	# coefficients are:
+	c=[-1.5, 2, -0.5]
+	dfdx[0] = c[0]*f[0] + c[1]*f[1] + c[2]*f[2]
+
+	# Two grids at Right boundary is computed by 4th order backard finite difference
+	# Here 'minus' sign is added for 'odd' backward derivatives in the loop at '-='
+	c.reverse() # c[i] for grids: [-4 -3 -2 -1	0]
+	dfdx[-1] -=  c[0]*f[-3] + c[1]*f[-2] + c[2]*f[-1]
+
+	return dfdx/dx
+
 # ---------------------------------------------------------------
 # Compare the central finite differences (CFD) with exact solution
 # ---------------------------------------------------------------
-h = 0.5; x = np.arange(0, 2*np.pi, h)
+h = 0.2; x = np.arange(0, 2*np.pi, h)
 exact_solution = -np.sin(x)
 
 # Finite difference approximation
 y = np.cos(x)
+dydx_2ndCFD = derivative_2ndCFD(y,h)
 dydx_4thCFD = derivative_4thCFD(y,h)
 dydx_6thCFD = derivative_6thCFD(y,h)
 dydx_8thCFD = derivative_8thCFD(y,h)
@@ -114,6 +138,7 @@ plt.plot(x, exact_solution, label = 'Exact solution')
 plt.plot(x, dydx_8thCFD, '-x', label = '8thCFD')
 plt.plot(x, dydx_6thCFD, '-o', label = '6thCFD')
 plt.plot(x, dydx_4thCFD, '--', label = '4thCFD')
+plt.plot(x, dydx_2ndCFD, ' +', label = '2ndCFD')
 plt.legend()
 plt.xlabel("x")
 plt.ylabel("dfdx")
@@ -125,10 +150,11 @@ plt.show()
 # Compute the maximum error for different grid size
 # ---------------------------------------------------------------
 # define step size and the number of iterations
-h = 10; iterations = 15
+h = 1.0; iterations = 20
 
 # Use list store the grid sizes the max error
 dx = []
+max_error_2nd = []
 max_error_4th = []
 max_error_6th = []
 max_error_8th = []
@@ -136,15 +162,16 @@ max_error_8th = []
 for i in range(iterations):
 	h /= 2 # halve the step size
 	dx.append(h)
-	x = np.arange(0, 10*np.pi, h)
+	x = np.arange(0, 2*np.pi, h)
 
 	exact_solution = -np.sin(x)
 
 	# Finite difference approximation
 	y = np.cos(x)
+	dydx_2nd = derivative_2ndCFD(y,h)
 	dydx_4th = derivative_4thCFD(y,h)
-	dydx_6th = derivative_4thCFD(y,h)
-	dydx_8th = derivative_4thCFD(y,h)
+	dydx_6th = derivative_6thCFD(y,h)
+	dydx_8th = derivative_8thCFD(y,h)
 	# dydx = np.gradient(y,h)
 
 	# compute exact solution
@@ -152,16 +179,19 @@ for i in range(iterations):
 
 	# Compute max error between
 	# numerical derivative and exact solution
+	max_error_2nd.append(max(abs(exact_solution - dydx_2nd)))
 	max_error_4th.append(max(abs(exact_solution - dydx_4th)))
 	max_error_6th.append(max(abs(exact_solution - dydx_6th)))
 	max_error_8th.append(max(abs(exact_solution - dydx_8th)))
 
 # produce log-log plot of max error versus the grid sizes
 plt.figure(figsize = (12, 8))
-plt.loglog(dx, max_error_4th, '-x', label = '8thCFD')
+plt.loglog(dx, max_error_2nd, ' +', label = '2ndCFD')
+plt.loglog(dx, max_error_4th, '-x', label = '4thCFD')
 plt.loglog(dx, max_error_6th, '-o', label = '6thCFD')
-plt.loglog(dx, max_error_8th, '--', label = '4thCFD')
-plt.xlabel("dx")
+plt.loglog(dx, max_error_8th, '--', label = '8thCFD')
+plt.legend()
+plt.xlabel("Grid size, dx")
 plt.ylabel("max_error")
 plt.show()
 # ---------------------------------------------------------------
@@ -196,7 +226,7 @@ plt.grid(True)
 plt.show()
 
 h = x[1]
-dydx = derivative_4thCFD(f,h)
+dydx_2ndCFD = derivative_2ndCFD(f,h)
 dydx_4thCFD = derivative_4thCFD(f,h)
 dydx_6thCFD = derivative_6thCFD(f,h)
 dydx_8thCFD = derivative_8thCFD(f,h)
@@ -204,6 +234,7 @@ plt.figure(figsize = (12, 8))
 plt.plot(x, dydx_8thCFD, '-x', label = '8thCFD')
 plt.plot(x, dydx_6thCFD, '-o', label = '6thCFD')
 plt.plot(x, dydx_4thCFD, '--', label = '4thCFD')
+plt.plot(x, dydx_2ndCFD, '+', label = '2ndCFD')
 plt.xlim(0.095, 0.105)
 plt.legend()
 plt.xlabel("x")
