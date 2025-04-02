@@ -99,7 +99,7 @@ def derivative_4thCFD(f,dx):
 # ---------------------------------------------------------------
 # Compare the central finite differences (CFD) with exact solution
 # ---------------------------------------------------------------
-h = 0.2; x = np.arange(0, 2*np.pi, h)
+h = 0.5; x = np.arange(0, 2*np.pi, h)
 exact_solution = -np.sin(x)
 
 # Finite difference approximation
@@ -117,7 +117,8 @@ plt.plot(x, dydx_4thCFD, '--', label = '4thCFD')
 plt.legend()
 plt.xlabel("x")
 plt.ylabel("dfdx")
-# plt.show()
+plt.show()
+
 # ---------------------------------------------------------------
 
 # ---------------------------------------------------------------
@@ -162,5 +163,50 @@ plt.loglog(dx, max_error_6th, '-o', label = '6thCFD')
 plt.loglog(dx, max_error_8th, '--', label = '4thCFD')
 plt.xlabel("dx")
 plt.ylabel("max_error")
+plt.show()
+# ---------------------------------------------------------------
+
+# ---------------------------------------------------------------
+# Test with a shock wave showing a stiff gradient
+# ---------------------------------------------------------------
+def stiff_gradient_function(x, x0=0.1, width=0.001):
+    """
+    Function with a stiff gradient centered at x0.
+    Mimics the structure of a shock wave.
+
+    Parameters:
+    - x: array of points where the function is evaluated
+    - x0: center of the steep gradient
+    - width: controls how steep the transition is
+
+    Returns:
+    - f(x): np.array
+    """
+    return np.tanh((x - x0) / width)
+
+# Example usage and visualization
+x = np.linspace(0.0, 0.2, 2000)
+f = stiff_gradient_function(x,width=0.0001)
+
+plt.plot(x, f)
+plt.title("Function with Stiff Gradient (Mimics a Shock)")
+plt.xlabel("x")
+plt.ylabel("f(x)")
+plt.grid(True)
+plt.show()
+
+h = x[1]
+dydx = derivative_4thCFD(f,h)
+dydx_4thCFD = derivative_4thCFD(f,h)
+dydx_6thCFD = derivative_6thCFD(f,h)
+dydx_8thCFD = derivative_8thCFD(f,h)
+plt.figure(figsize = (12, 8))
+plt.plot(x, dydx_8thCFD, '-x', label = '8thCFD')
+plt.plot(x, dydx_6thCFD, '-o', label = '6thCFD')
+plt.plot(x, dydx_4thCFD, '--', label = '4thCFD')
+plt.xlim(0.095, 0.105)
+plt.legend()
+plt.xlabel("x")
+plt.ylabel("dfdx")
 plt.show()
 # ---------------------------------------------------------------
